@@ -1,6 +1,5 @@
 package com.ok.beforecommit
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBCheckBox
@@ -24,7 +23,6 @@ class ChecklistDialog(
 
     override fun createCenterPanel(): JComponent {
         checkboxes.clear()
-
         val grouped = items.groupBy { it.category }
 
         val dialogPanel = panel {
@@ -40,7 +38,7 @@ class ChecklistDialog(
                 group(category) {
                     categoryItems.forEach { item ->
                         row {
-                            icon(AllIcons.General.InspectionsOK)
+                            icon(ChecklistIcon.fromName(item.iconName).icon)
                             val cb = checkBox(item.text).component
                             checkboxes.add(cb)
                         }

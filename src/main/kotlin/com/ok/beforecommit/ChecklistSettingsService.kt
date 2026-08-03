@@ -25,15 +25,19 @@ class ChecklistSettingsService : PersistentStateComponent<ChecklistSettingsServi
 
     fun getItems(): MutableList<ChecklistItem> = myState.items
 
-    fun addItem(text: String) {
-        myState.items.add(ChecklistItem(UUID.randomUUID().toString(), text))
+    fun addItem(text: String, category: String, iconName: String) {
+        myState.items.add(ChecklistItem(UUID.randomUUID().toString(), text, category, iconName))
     }
 
     fun removeItem(id: String) {
         myState.items.removeIf { it.id == id }
     }
 
-    fun getCategories(): List<String> = myState.items.map { it.category }.distinct().ifEmpty { listOf("General") }
+    /** 기본 카테고리 + 실제 등록된 카테고리를 중복 없이 합쳐서 반환 */
+    fun getCategories(): List<String> {
+        val used = myState.items.map { it.category }
+        return (ChecklistCategories.DEFAULTS + used).distinct()
+    }
 
     companion object {
         fun getInstance(project: Project): ChecklistSettingsService =
