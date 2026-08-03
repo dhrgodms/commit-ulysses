@@ -1,5 +1,6 @@
 package com.ok.beforecommit
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBCheckBox
@@ -36,6 +37,7 @@ class ChecklistDialog(
             group("Checklist") {
                 items.forEach { item ->
                     row {
+                        icon(AllIcons.General.InspectionsOK)
                         val cb = checkBox(item.text).component
                         checkboxes.add(cb)
                     }
