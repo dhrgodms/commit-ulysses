@@ -6,6 +6,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.components.JBList
 import java.awt.BorderLayout
+import java.util.*
 import javax.swing.DefaultListModel
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -23,7 +24,7 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
 
         jbList = JBList(listModel)
         jbList.cellRenderer = javax.swing.ListCellRenderer { list, value, index, isSelected, cellHasFocus ->
-            javax.swing.JLabel(value.text).apply {
+            javax.swing.JLabel("[${value.category}] ${value.text}").apply {
                 isOpaque = true
                 if (isSelected) {
                     background = list.selectionBackground
@@ -37,9 +38,24 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
 
         val decoratedPanel = ToolbarDecorator.createDecorator(jbList)
             .setAddAction {
+                val existingCategories = ChecklistSettingsService.getInstance(project).getCategories()
+                val category = Messages.showEditableChooseDialog(
+                    "Enter or select a category",
+                    "Category",
+                    null,
+                    existingCategories.toTypedArray(),
+                    existingCategories.firstOrNull() ?: "General",
+                    null
+                ) ?: return@setAddAction
+
                 val text = Messages.showInputDialog(project, "Enter a checklist item", "Add Item", null)
                 if (!text.isNullOrBlank()) {
-                    listModel.addElement(ChecklistItem(java.util.UUID.randomUUID().toString(), text))
+                    listModel.addElement(
+                        ChecklistItem(
+                            UUID.randomUUID().toString(),
+                            text,
+                            category.ifBlank { "General" })
+                    )
                 }
             }
             .setRemoveAction {
@@ -59,7 +75,7 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
         val current = ChecklistSettingsService.getInstance(project).getItems()
         val edited = currentListItems()
         if (current.size != edited.size) return true
-        return current.zip(edited).any { (a, b) -> a.text != b.text }
+        return current.zip(edited).any { (a, b) -> a.text != b.text || a.category != b.category }
     }
 
     override fun apply() {

@@ -25,6 +25,8 @@ class ChecklistDialog(
     override fun createCenterPanel(): JComponent {
         checkboxes.clear()
 
+        val grouped = items.groupBy { it.category }
+
         val dialogPanel = panel {
             row {
                 label("Please confirm the following before committing")
@@ -34,12 +36,14 @@ class ChecklistDialog(
                 comment("The commit will be blocked until all items are checked.")
             }
 
-            group("Checklist") {
-                items.forEach { item ->
-                    row {
-                        icon(AllIcons.General.InspectionsOK)
-                        val cb = checkBox(item.text).component
-                        checkboxes.add(cb)
+            grouped.forEach { (category, categoryItems) ->
+                group(category) {
+                    categoryItems.forEach { item ->
+                        row {
+                            icon(AllIcons.General.InspectionsOK)
+                            val cb = checkBox(item.text).component
+                            checkboxes.add(cb)
+                        }
                     }
                 }
             }

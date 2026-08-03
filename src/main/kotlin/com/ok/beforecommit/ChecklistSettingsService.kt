@@ -5,7 +5,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
-import java.util.UUID
+import java.util.*
 
 @Service(Service.Level.PROJECT)
 @State(name = "CommitChecklistSettings", storages = [Storage("commitChecklist.xml")])
@@ -32,6 +32,8 @@ class ChecklistSettingsService : PersistentStateComponent<ChecklistSettingsServi
     fun removeItem(id: String) {
         myState.items.removeIf { it.id == id }
     }
+
+    fun getCategories(): List<String> = myState.items.map { it.category }.distinct().ifEmpty { listOf("General") }
 
     companion object {
         fun getInstance(project: Project): ChecklistSettingsService =
