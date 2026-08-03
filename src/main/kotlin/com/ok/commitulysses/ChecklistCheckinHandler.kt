@@ -1,4 +1,4 @@
-package com.ok.beforecommit
+package com.ok.commitulysses
 
 import com.intellij.openapi.vcs.CheckinProjectPanel
 import com.intellij.openapi.vcs.changes.CommitExecutor

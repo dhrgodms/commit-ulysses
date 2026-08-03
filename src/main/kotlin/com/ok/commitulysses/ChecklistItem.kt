@@ -1,4 +1,4 @@
-package com.ok.beforecommit
+package com.ok.commitulysses
 
 data class ChecklistItem(
     var id: String = "",

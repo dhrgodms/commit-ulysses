@@ -1,4 +1,4 @@
-package com.ok.beforecommit
+package com.ok.commitulysses
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper

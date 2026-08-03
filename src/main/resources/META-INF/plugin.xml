@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>com.ok.beforecommit</id>
+    <id>com.ok.commitulysses</id>
     <name>Before Commit</name>
     <vendor>Ok haeeun</vendor>
     <description>커밋 전 체크리스트를 강제하는 플러그인</description>
@@ -8,14 +8,14 @@
     <depends>com.intellij.modules.vcs</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="com.ok.beforecommit.ChecklistSettingsService"/>
+        <projectService serviceImplementation="com.ok.commitulysses.ChecklistSettingsService"/>
 
         <projectConfigurable
                 parentId="tools"
-                instance="com.ok.beforecommit.ChecklistConfigurable"
-                id="com.ok.beforecommit.settings"
+                instance="com.ok.commitulysses.ChecklistConfigurable"
+                id="com.ok.commitulysses.settings"
                 displayName="Before Commit"/>
 
-        <checkinHandlerFactory implementation="com.ok.beforecommit.ChecklistCheckinHandlerFactory"/>
+        <checkinHandlerFactory implementation="com.ok.commitulysses.ChecklistCheckinHandlerFactory"/>
     </extensions>
 </idea-plugin>
