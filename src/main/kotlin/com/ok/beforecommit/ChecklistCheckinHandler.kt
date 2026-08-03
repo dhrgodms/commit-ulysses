@@ -1,6 +1,5 @@
 package com.ok.beforecommit
 
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vcs.CheckinProjectPanel
 import com.intellij.openapi.vcs.changes.CommitExecutor
 import com.intellij.openapi.vcs.checkin.CheckinHandler
@@ -23,11 +22,7 @@ class ChecklistCheckinHandler(private val panel: CheckinProjectPanel) : CheckinH
         }
 
         if (!dialog.allChecked()) {
-            Messages.showWarningDialog(
-                project,
-                "The following items are not checked:\n" + dialog.uncheckedTexts().joinToString("\n") { "- $it" },
-                "Commit Checklist"
-            )
+            IncompleteChecklistDialog(project, dialog.uncheckedItems()).show()
             return ReturnResult.CANCEL
         }
 

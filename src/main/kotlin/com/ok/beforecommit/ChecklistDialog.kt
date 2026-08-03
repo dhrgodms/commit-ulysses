@@ -12,7 +12,7 @@ class ChecklistDialog(
     private val items: List<ChecklistItem>
 ) : DialogWrapper(project) {
 
-    private val checkboxes = mutableListOf<JBCheckBox>()
+    private val itemCheckboxPairs = mutableListOf<Pair<ChecklistItem, JBCheckBox>>()
 
     init {
         title = "Commit Checklist"
@@ -22,7 +22,7 @@ class ChecklistDialog(
     }
 
     override fun createCenterPanel(): JComponent {
-        checkboxes.clear()
+        itemCheckboxPairs.clear()
         val grouped = items.groupBy { it.category }
 
         val dialogPanel = panel {
@@ -40,7 +40,7 @@ class ChecklistDialog(
                         row {
                             icon(ChecklistIcon.fromName(item.iconName).icon)
                             val cb = checkBox(item.text).component
-                            checkboxes.add(cb)
+                            itemCheckboxPairs.add(item to cb)
                         }
                     }
                 }
@@ -51,10 +51,10 @@ class ChecklistDialog(
         return dialogPanel
     }
 
-    override fun getPreferredFocusedComponent(): JComponent? = checkboxes.firstOrNull()
+    override fun getPreferredFocusedComponent(): JComponent? = itemCheckboxPairs.firstOrNull()?.second
 
-    fun allChecked(): Boolean = checkboxes.all { it.isSelected }
+    fun allChecked(): Boolean = itemCheckboxPairs.all { it.second.isSelected }
 
-    fun uncheckedTexts(): List<String> =
-        checkboxes.filter { !it.isSelected }.map { it.text }
+    fun uncheckedItems(): List<ChecklistItem> =
+        itemCheckboxPairs.filter { !it.second.isSelected }.map { it.first }
 }
