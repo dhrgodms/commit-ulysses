@@ -66,6 +66,19 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
                     refreshList()
                 }
             }
+            .setEditAction {
+                val index = checkBoxList.selectedIndex
+                val item = if (index != -1) checkBoxList.getItemAt(index) else null
+                if (item != null) {
+                    val dialog = AddChecklistItemDialog(project, item)
+                    if (dialog.showAndGet()) {
+                        item.text = dialog.itemText
+                        item.category = dialog.selectedCategory
+                        item.iconName = dialog.selectedIcon.name
+                        refreshList()
+                    }
+                }
+            }
             .setRemoveAction {
                 val index = checkBoxList.selectedIndex
                 if (index != -1) {
@@ -87,11 +100,13 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
 // Assumes items are added pre-grouped by category (see refreshList) so a category change marks a group boundary.
 private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
 
-    // adjustRendering wraps the checkbox in extra icon/indent panels, so the default
-    // insets-only hit-testing no longer lines up; delegate to the platform's variant
-    // that walks the actual rendered component tree to find the checkbox.
-    override fun findPointRelativeToCheckBox(x: Int, y: Int, checkBox: JCheckBox, index: Int): java.awt.Point? =
-        findPointRelativeToCheckBoxWithAdjustedRendering(x, y, checkBox, index)
+    // Platform's adjusted-rendering hit-test never lays out the rebuilt row, so compute the checkbox's offset ourselves instead.
+    override fun findPointRelativeToCheckBox(x: Int, y: Int, checkBox: JCheckBox, index: Int): java.awt.Point? {
+        val item = getItemAt(index) ?: return super.findPointRelativeToCheckBox(x, y, checkBox, index)
+        val headerHeight = if (isGroupStart(item, index)) createCategoryHeader(item.category).preferredSize.height else 0
+        val iconWidth = createIconLabel(item).preferredSize.width
+        return super.findPointRelativeToCheckBox(x - INDENT - iconWidth, y - headerHeight, checkBox, index)
+    }
 
     override fun adjustRendering(
         rootComponent: JComponent,
@@ -102,12 +117,10 @@ private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
     ): JComponent {
         val rendered = super.adjustRendering(rootComponent, checkBox, index, selected, hasFocus)
         val item = getItemAt(index) ?: return rendered
-        val previousCategory = if (index > 0) getItemAt(index - 1)?.category else null
 
-        val iconLabel = JLabel(ChecklistIcon.fromName(item.iconName).icon).apply {
+        val iconLabel = createIconLabel(item).apply {
             isOpaque = true
             background = checkBox.background
-            border = JBUI.Borders.emptyRight(4)
         }
         val rowWithIcon = JPanel(BorderLayout()).apply {
             isOpaque = true
@@ -119,11 +132,11 @@ private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
         val indentedRow = JPanel(BorderLayout()).apply {
             isOpaque = true
             background = checkBox.background
-            border = JBUI.Borders.emptyLeft(16)
+            border = JBUI.Borders.emptyLeft(INDENT)
             add(rowWithIcon, BorderLayout.CENTER)
         }
 
-        if (item.category == previousCategory) {
+        if (!isGroupStart(item, index)) {
             return indentedRow
         }
 
@@ -135,9 +148,23 @@ private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
         }
     }
 
+    private fun isGroupStart(item: ChecklistItem, index: Int): Boolean {
+        val previousCategory = if (index > 0) getItemAt(index - 1)?.category else null
+        return item.category != previousCategory
+    }
+
+    private fun createIconLabel(item: ChecklistItem): JLabel =
+        JLabel(ChecklistIcon.fromName(item.iconName).icon).apply {
+            border = JBUI.Borders.emptyRight(4)
+        }
+
     private fun createCategoryHeader(category: String): JComponent =
         SeparatorWithText().apply {
             caption = category
             border = JBUI.Borders.empty(6, 4, 2, 4)
         }
+
+    companion object {
+        private const val INDENT = 16
+    }
 }

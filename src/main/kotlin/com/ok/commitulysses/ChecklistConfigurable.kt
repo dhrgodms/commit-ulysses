@@ -80,23 +80,26 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
     }
 }
 
-/** 항목 추가용 다이얼로그: 카테고리(선택/생성) + 아이콘 + 텍스트 */
-class AddChecklistItemDialog(private val project: Project) : DialogWrapper(project) {
+/** 항목 추가/수정용 다이얼로그: 카테고리(선택/생성) + 아이콘 + 텍스트 */
+class AddChecklistItemDialog(
+    private val project: Project,
+    private val existingItem: ChecklistItem? = null
+) : DialogWrapper(project) {
 
     private lateinit var categoryCombo: ComboBox<String>
     private lateinit var newCategoryField: JBTextField
     private lateinit var iconCombo: ComboBox<ChecklistIcon>
     private lateinit var textField: JBTextField
 
-    var selectedCategory: String = "General"
+    var selectedCategory: String = existingItem?.category ?: "General"
         private set
-    var selectedIcon: ChecklistIcon = ChecklistIcon.CHECK
+    var selectedIcon: ChecklistIcon = existingItem?.let { ChecklistIcon.fromName(it.iconName) } ?: ChecklistIcon.CHECK
         private set
-    var itemText: String = ""
+    var itemText: String = existingItem?.text ?: ""
         private set
 
     init {
-        title = "Add Checklist Item"
+        title = if (existingItem != null) "Edit Checklist Item" else "Add Checklist Item"
         init()
     }
 
@@ -106,6 +109,7 @@ class AddChecklistItemDialog(private val project: Project) : DialogWrapper(proje
         val dialogPanel = panel {
             row("Category:") {
                 categoryCombo = comboBox(categories).component
+                categoryCombo.selectedItem = selectedCategory
             }
             row("New category:") {
                 newCategoryField = textField()
@@ -128,11 +132,13 @@ class AddChecklistItemDialog(private val project: Project) : DialogWrapper(proje
                         }
                     }
                 ).component
+                iconCombo.selectedItem = selectedIcon
             }
             row("Item text:") {
                 textField = textField()
                     .align(AlignX.FILL)
                     .component
+                textField.text = itemText
             }
         }
 
