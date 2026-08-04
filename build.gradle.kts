@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.ok"
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -34,8 +34,9 @@ intellijPlatform {
 
         changeNotes = """
             <ul>
-                <li>카테고리별 전체 선택(check all) 기능 추가</li>
-                <li>툴 윈도우를 통한 체크리스트 보기 기능 추가</li>
+                <li>체크된 아이템 저장 기능 추가</li>
+                <li>카테고리별 분리선 추가</li>
+                <li>툴 윈도우에서 체크리스트 아이템 수정 기능 추가</li>
             </ul>
         """.trimIndent()
     }
