@@ -6,10 +6,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.CheckBoxList
+import com.intellij.ui.SeparatorWithText
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.content.ContentFactory
+import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import java.util.UUID
+import javax.swing.JCheckBox
+import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JPanel
 
 class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
@@ -22,13 +27,17 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
     private fun createPanel(project: Project, toolWindow: ToolWindow): JPanel {
         val service = ChecklistSettingsService.getInstance(project)
 
-        val checkBoxList = CheckBoxList<ChecklistItem>()
+        val checkBoxList = CategorizedCheckBoxList()
 
         fun refreshList() {
             checkBoxList.clear()
-            service.getItems().forEach { item ->
-                checkBoxList.addItem(item, "[${item.category}] ${item.text}", item.checked)
-            }
+            service.getItems()
+                .groupBy { it.category }
+                .values
+                .flatten()
+                .forEach { item ->
+                    checkBoxList.addItem(item, item.text, item.checked)
+                }
         }
         refreshList()
 
@@ -57,6 +66,19 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
                     refreshList()
                 }
             }
+            .setEditAction {
+                val index = checkBoxList.selectedIndex
+                val item = if (index != -1) checkBoxList.getItemAt(index) else null
+                if (item != null) {
+                    val dialog = AddChecklistItemDialog(project, item)
+                    if (dialog.showAndGet()) {
+                        item.text = dialog.itemText
+                        item.category = dialog.selectedCategory
+                        item.iconName = dialog.selectedIcon.name
+                        refreshList()
+                    }
+                }
+            }
             .setRemoveAction {
                 val index = checkBoxList.selectedIndex
                 if (index != -1) {
@@ -72,5 +94,77 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
         return JPanel(BorderLayout()).apply {
             add(decoratedPanel, BorderLayout.CENTER)
         }
+    }
+}
+
+// Assumes items are added pre-grouped by category (see refreshList) so a category change marks a group boundary.
+private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
+
+    // Platform's adjusted-rendering hit-test never lays out the rebuilt row, so compute the checkbox's offset ourselves instead.
+    override fun findPointRelativeToCheckBox(x: Int, y: Int, checkBox: JCheckBox, index: Int): java.awt.Point? {
+        val item = getItemAt(index) ?: return super.findPointRelativeToCheckBox(x, y, checkBox, index)
+        val headerHeight = if (isGroupStart(item, index)) createCategoryHeader(item.category).preferredSize.height else 0
+        val iconWidth = createIconLabel(item).preferredSize.width
+        return super.findPointRelativeToCheckBox(x - INDENT - iconWidth, y - headerHeight, checkBox, index)
+    }
+
+    override fun adjustRendering(
+        rootComponent: JComponent,
+        checkBox: JCheckBox,
+        index: Int,
+        selected: Boolean,
+        hasFocus: Boolean
+    ): JComponent {
+        val rendered = super.adjustRendering(rootComponent, checkBox, index, selected, hasFocus)
+        val item = getItemAt(index) ?: return rendered
+
+        val iconLabel = createIconLabel(item).apply {
+            isOpaque = true
+            background = checkBox.background
+        }
+        val rowWithIcon = JPanel(BorderLayout()).apply {
+            isOpaque = true
+            background = checkBox.background
+            add(iconLabel, BorderLayout.WEST)
+            add(rendered, BorderLayout.CENTER)
+        }
+
+        val indentedRow = JPanel(BorderLayout()).apply {
+            isOpaque = true
+            background = checkBox.background
+            border = JBUI.Borders.emptyLeft(INDENT)
+            add(rowWithIcon, BorderLayout.CENTER)
+        }
+
+        if (!isGroupStart(item, index)) {
+            return indentedRow
+        }
+
+        return JPanel(BorderLayout()).apply {
+            isOpaque = true
+            background = checkBox.background
+            add(createCategoryHeader(item.category), BorderLayout.NORTH)
+            add(indentedRow, BorderLayout.CENTER)
+        }
+    }
+
+    private fun isGroupStart(item: ChecklistItem, index: Int): Boolean {
+        val previousCategory = if (index > 0) getItemAt(index - 1)?.category else null
+        return item.category != previousCategory
+    }
+
+    private fun createIconLabel(item: ChecklistItem): JLabel =
+        JLabel(ChecklistIcon.fromName(item.iconName).icon).apply {
+            border = JBUI.Borders.emptyRight(4)
+        }
+
+    private fun createCategoryHeader(category: String): JComponent =
+        SeparatorWithText().apply {
+            caption = category
+            border = JBUI.Borders.empty(6, 4, 2, 4)
+        }
+
+    companion object {
+        private const val INDENT = 16
     }
 }
