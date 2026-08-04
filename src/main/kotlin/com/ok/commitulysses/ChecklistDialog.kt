@@ -15,7 +15,7 @@ class ChecklistDialog(
     private val itemCheckboxPairs = mutableListOf<Pair<ChecklistItem, JBCheckBox>>()
 
     init {
-        title = "Commit Checklist"
+        title = "Commit Ulysses"
         setOKButtonText("Commit")
         setCancelButtonText("Cancel")
         init()
