@@ -27,22 +27,7 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
         ChecklistSettingsService.getInstance(project).getItems().forEach { listModel.addElement(it) }
 
         jbList = JBList(listModel)
-        jbList.cellRenderer = ListCellRenderer<ChecklistItem> { list, value, _, isSelected, _ ->
-            JLabel(
-                "[${value.category}] ${value.text}",
-                ChecklistIcon.fromName(value.iconName).icon,
-                SwingConstants.LEFT
-            ).apply {
-                isOpaque = true
-                if (isSelected) {
-                    background = list.selectionBackground
-                    foreground = list.selectionForeground
-                } else {
-                    background = list.background
-                    foreground = list.foreground
-                }
-            }
-        }
+        jbList.cellRenderer = ChecklistItemRenderer.create()
 
         val decoratedPanel = ToolbarDecorator.createDecorator(jbList)
             .setAddAction {
@@ -96,7 +81,7 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
 }
 
 /** 항목 추가용 다이얼로그: 카테고리(선택/생성) + 아이콘 + 텍스트 */
-private class AddChecklistItemDialog(private val project: Project) : DialogWrapper(project) {
+class AddChecklistItemDialog(private val project: Project) : DialogWrapper(project) {
 
     private lateinit var categoryCombo: ComboBox<String>
     private lateinit var newCategoryField: JBTextField
@@ -130,7 +115,7 @@ private class AddChecklistItemDialog(private val project: Project) : DialogWrapp
             row("Icon:") {
                 iconCombo = comboBox(
                     ChecklistIcon.entries.toList(),
-                    renderer = ListCellRenderer<ChecklistIcon?> { list, value, index, isSelected, cellHasFocus ->
+                    renderer = ListCellRenderer<ChecklistIcon?> { list, value, _, isSelected, _ ->
                         JLabel(value?.label, value?.icon, SwingConstants.LEFT).apply {
                             isOpaque = true
                             if (isSelected) {
