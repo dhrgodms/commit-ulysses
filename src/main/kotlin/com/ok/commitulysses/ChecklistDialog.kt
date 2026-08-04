@@ -18,6 +18,8 @@ class ChecklistDialog(
     private val categoryCheckboxes = mutableMapOf<String, MutableList<JBCheckBox>>()
     private val categoryLinks = mutableMapOf<String, ActionLink>()
     private var selectAllLink: ActionLink? = null
+    private val selectAllString = "Select All"
+    private val deSelectAllString = "Deselect All"
 
     init {
         title = "Commit Ulysses"
@@ -37,7 +39,7 @@ class ChecklistDialog(
                 label("Please confirm the following before committing")
                     .applyToComponent { font = font.deriveFont(font.style or java.awt.Font.BOLD, 14f) }
                     .resizableColumn()
-                selectAllLink = link("Select All") {}.align(AlignX.RIGHT).component
+                selectAllLink = link(selectAllString) {}.align(AlignX.RIGHT).component
             }
             row {
                 comment("The commit will be blocked until all items are checked.")
@@ -47,13 +49,17 @@ class ChecklistDialog(
                 group(category) {
                     row {
                         label("").resizableColumn()
-                        categoryLinks[category] = link("Select All") {}.align(AlignX.RIGHT).component
+                        categoryLinks[category] = link(selectAllString) {}.align(AlignX.RIGHT).component
                     }
                     categoryItems.forEach { item ->
                         row {
                             icon(ChecklistIcon.fromName(item.iconName).icon)
                             val cb = checkBox(item.text).component
-                            cb.addItemListener { updateLinkTexts() }
+                            cb.isSelected = item.checked
+                            cb.addItemListener {
+                                item.checked = cb.isSelected
+                                updateLinkTexts()
+                            }
                             itemCheckboxPairs.add(item to cb)
                             categoryCheckboxes.getOrPut(category) { mutableListOf() }.add(cb)
                         }
@@ -81,11 +87,11 @@ class ChecklistDialog(
 
     private fun updateLinkTexts() {
         val allChecked = itemCheckboxPairs.isNotEmpty() && itemCheckboxPairs.all { it.second.isSelected }
-        selectAllLink?.text = if (allChecked) "Deselect All" else "Select All"
+        selectAllLink?.text = if (allChecked) deSelectAllString else selectAllString
 
         categoryCheckboxes.forEach { (category, checkboxes) ->
             val categoryAllChecked = checkboxes.isNotEmpty() && checkboxes.all { it.isSelected }
-            categoryLinks[category]?.text = if (categoryAllChecked) "Deselect All" else "Select All"
+            categoryLinks[category]?.text = if (categoryAllChecked) deSelectAllString else selectAllString
         }
     }
 

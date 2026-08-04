@@ -33,6 +33,10 @@ class ChecklistSettingsService : PersistentStateComponent<ChecklistSettingsServi
         myState.items.removeIf { it.id == id }
     }
 
+    fun resetAllChecked() {
+        myState.items.forEach { it.checked = false }
+    }
+
     /** 기본 카테고리 + 실제 등록된 카테고리를 중복 없이 합쳐서 반환 */
     fun getCategories(): List<String> {
         val used = myState.items.map { it.category }
