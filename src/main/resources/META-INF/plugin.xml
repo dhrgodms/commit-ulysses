@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.ok.commitulysses</id>
-    <name>Before Commit</name>
-    <vendor>Ok haeeun</vendor>
+    <name>Commit Ulysses</name>
+    <vendor>Ok Haeeun</vendor>
     <description>커밋 전 체크리스트를 강제하는 플러그인</description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -14,7 +14,7 @@
                 parentId="tools"
                 instance="com.ok.commitulysses.ChecklistConfigurable"
                 id="com.ok.commitulysses.settings"
-                displayName="Before Commit"/>
+                displayName="Commit Ulysses"/>
 
         <checkinHandlerFactory implementation="com.ok.commitulysses.ChecklistCheckinHandlerFactory"/>
     </extensions>
