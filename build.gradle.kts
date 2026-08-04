@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.ok"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -33,7 +33,10 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Initial version
+            <ul>
+                <li>카테고리별 전체 선택(check all) 기능 추가</li>
+                <li>툴 윈도우를 통한 체크리스트 보기 기능 추가</li>
+            </ul>
         """.trimIndent()
     }
 }
