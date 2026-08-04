@@ -1,33 +1,49 @@
 package com.ok.commitulysses
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.CheckBoxList
 import com.intellij.ui.ToolbarDecorator
-import com.intellij.ui.components.JBList
 import com.intellij.ui.content.ContentFactory
 import java.awt.BorderLayout
 import java.util.UUID
-import javax.swing.DefaultListModel
 import javax.swing.JPanel
 
 class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val content = ContentFactory.getInstance().createContent(createPanel(project), "", false)
+        val content = ContentFactory.getInstance().createContent(createPanel(project, toolWindow), "", false)
         toolWindow.contentManager.addContent(content)
     }
 
-    private fun createPanel(project: Project): JPanel {
+    private fun createPanel(project: Project, toolWindow: ToolWindow): JPanel {
         val service = ChecklistSettingsService.getInstance(project)
-        val listModel = DefaultListModel<ChecklistItem>()
-        service.getItems().forEach { listModel.addElement(it) }
 
-        val jbList = JBList(listModel)
-        jbList.cellRenderer = ChecklistItemRenderer.create()
+        val checkBoxList = CheckBoxList<ChecklistItem>()
 
-        val decoratedPanel = ToolbarDecorator.createDecorator(jbList)
+        fun refreshList() {
+            checkBoxList.clear()
+            service.getItems().forEach { item ->
+                checkBoxList.addItem(item, "[${item.category}] ${item.text}", item.checked)
+            }
+        }
+        refreshList()
+
+        checkBoxList.setCheckBoxListListener { index, checked ->
+            checkBoxList.getItemAt(index)?.checked = checked
+        }
+
+        project.messageBus.connect(toolWindow.disposable).subscribe(
+            ChecklistResetListener.TOPIC,
+            ChecklistResetListener {
+                ApplicationManager.getApplication().invokeLater { refreshList() }
+            }
+        )
+
+        val decoratedPanel = ToolbarDecorator.createDecorator(checkBoxList)
             .setAddAction {
                 val dialog = AddChecklistItemDialog(project)
                 if (dialog.showAndGet()) {
@@ -37,16 +53,18 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
                         category = dialog.selectedCategory,
                         iconName = dialog.selectedIcon.name
                     )
-                    listModel.addElement(item)
                     service.getItems().add(item)
+                    refreshList()
                 }
             }
             .setRemoveAction {
-                val index = jbList.selectedIndex
+                val index = checkBoxList.selectedIndex
                 if (index != -1) {
-                    val item = listModel.getElementAt(index)
-                    listModel.remove(index)
-                    service.getItems().removeIf { it.id == item.id }
+                    val item = checkBoxList.getItemAt(index)
+                    if (item != null) {
+                        service.getItems().removeIf { it.id == item.id }
+                        refreshList()
+                    }
                 }
             }
             .createPanel()

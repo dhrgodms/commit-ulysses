@@ -28,4 +28,10 @@ class ChecklistCheckinHandler(private val panel: CheckinProjectPanel) : CheckinH
 
         return ReturnResult.COMMIT
     }
+
+    override fun checkinSuccessful() {
+        val project = panel.project
+        ChecklistSettingsService.getInstance(project).resetAllChecked()
+        project.messageBus.syncPublisher(ChecklistResetListener.TOPIC).onChecklistReset()
+    }
 }
