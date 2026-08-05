@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13 13" width="13" height="13" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Left Bracket -->
+  <path d="M 3 3.5 L 0.5 6.5 L 3 9.5" stroke="#CED0D6" />
+  <!-- Right Bracket (Reverted near v3, but safer at 12.8 to prevent clipping) -->
+  <path d="M 10.5 3.5 L 12.8 6.5 L 10.5 9.5" stroke="#CED0D6" />
+  <!-- Arrow Head -->
+  <path d="M 4.5 4.5 L 6.5 2.5 L 8.5 4.5" stroke="#CED0D6" />
+  <!-- Upper Arrow Shaft -->
+  <path d="M 6.5 2.5 L 6.5 6" stroke="#CED0D6" />
+  <!-- Lower Shaft Segment -->
+  <path d="M 6.5 10 L 6.5 11.5" stroke="#CED0D6" />
+  <!-- Checkmark (Overlap maintained, but tightened right-top end from 9.5 to 9.0) -->
+  <path d="M 4 7.5 L 5.5 9 L 9.0 4.5" stroke="#CED0D6" />
+</svg>

@@ -20,7 +20,7 @@ class ChecklistConfigurable(private val project: Project) : Configurable {
     private lateinit var listModel: DefaultListModel<ChecklistItem>
     private lateinit var jbList: JBList<ChecklistItem>
 
-    override fun getDisplayName(): String = "Commit Checklist"
+    override fun getDisplayName(): String = "Commit Ulysses"
 
     override fun createComponent(): JComponent {
         listModel = DefaultListModel()

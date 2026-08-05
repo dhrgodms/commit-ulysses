@@ -18,9 +18,9 @@
 
         <checkinHandlerFactory implementation="com.ok.commitulysses.ChecklistCheckinHandlerFactory"/>
 
-        <toolWindow id="Commit Checklist"
+        <toolWindow id="Commit Ulysses"
                     anchor="right"
-                    icon="AllIcons.General.InspectionsOK"
+                    icon="/icons/toolWindow.svg"
                     factoryClass="com.ok.commitulysses.ChecklistToolWindowFactory"/>
     </extensions>
 </idea-plugin>
