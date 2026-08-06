@@ -1,5 +1,9 @@
 package com.ok.commitulysses
 
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -89,6 +93,14 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
                     }
                 }
             }
+            .addExtraAction(object : AnAction("Uncheck All", null, AllIcons.Actions.Unselectall) {
+                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
+
+                override fun actionPerformed(e: AnActionEvent) {
+                    service.resetAllChecked()
+                    refreshList()
+                }
+            })
             .createPanel()
 
         return JPanel(BorderLayout()).apply {
