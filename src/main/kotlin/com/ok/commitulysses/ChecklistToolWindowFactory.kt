@@ -15,6 +15,8 @@ import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.util.UUID
 import javax.swing.JCheckBox
 import javax.swing.JComponent
@@ -112,6 +114,29 @@ class ChecklistToolWindowFactory : ToolWindowFactory, DumbAware {
 // Assumes items are added pre-grouped by category (see refreshList) so a category change marks a group boundary.
 private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
 
+    init {
+        // Category header isn't part of the real component tree, so lay it out on demand to hit-test the toggle link.
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                val index = locationToIndex(e.point)
+                if (index == -1) return
+                val cellBounds = getCellBounds(index, index) ?: return
+                if (!cellBounds.contains(e.point)) return
+                val item = getItemAt(index) ?: return
+                if (!isGroupStart(item, index)) return
+
+                val header = createCategoryHeader(item.category)
+                header.setBounds(0, 0, cellBounds.width, header.preferredSize.height)
+                header.doLayout()
+
+                val link = header.getComponent(1)
+                if (link.bounds.contains(e.x - cellBounds.x, e.y - cellBounds.y)) {
+                    toggleCategory(item.category)
+                }
+            }
+        })
+    }
+
     // Platform's adjusted-rendering hit-test never lays out the rebuilt row, so compute the checkbox's offset ourselves instead.
     override fun findPointRelativeToCheckBox(x: Int, y: Int, checkBox: JCheckBox, index: Int): java.awt.Point? {
         val item = getItemAt(index) ?: return super.findPointRelativeToCheckBox(x, y, checkBox, index)
@@ -170,11 +195,36 @@ private class CategorizedCheckBoxList : CheckBoxList<ChecklistItem>() {
             border = JBUI.Borders.emptyRight(4)
         }
 
-    private fun createCategoryHeader(category: String): JComponent =
-        SeparatorWithText().apply {
-            caption = category
+    // Second child (BorderLayout.EAST) is relied on by the click handler above to hit-test the toggle checkbox.
+    private fun createCategoryHeader(category: String): JPanel =
+        JPanel(BorderLayout()).apply {
+            isOpaque = false
             border = JBUI.Borders.empty(6, 4, 2, 4)
+            add(SeparatorWithText().apply { caption = category }, BorderLayout.CENTER)
+            add(createCategoryToggleCheckBox(category), BorderLayout.EAST)
         }
+
+    // Fixed-width checkbox instead of a "Select All"/"Deselect All" link so the label length change doesn't jitter the header layout.
+    private fun createCategoryToggleCheckBox(category: String): JCheckBox =
+        JCheckBox().apply {
+            isOpaque = false
+            isSelected = isCategoryFullyChecked(category)
+            toolTipText = if (isSelected) "Deselect all in \"$category\"" else "Select all in \"$category\""
+        }
+
+    private fun isCategoryFullyChecked(category: String): Boolean {
+        val items = getAllItems().filter { it.category == category }
+        return items.isNotEmpty() && items.all { isItemSelected(it) }
+    }
+
+    private fun toggleCategory(category: String) {
+        val newState = !isCategoryFullyChecked(category)
+        getAllItems().filter { it.category == category }.forEach { item ->
+            setItemSelected(item, newState)
+            item.checked = newState
+        }
+        repaint()
+    }
 
     companion object {
         private const val INDENT = 16
